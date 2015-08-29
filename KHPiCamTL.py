@@ -1,21 +1,14 @@
 #!/usr/bin/python 
- 
- 
+
+# Doku von picamera: http://picamera.readthedocs.org/en/release-1.10/recipes1.html
+
+  
 from datetime import datetime 
 from datetime import timedelta 
 import subprocess 
 import time 
- 
- 
-from wrappers import GPhoto 
+import picamera
 from wrappers import Identify 
-from wrappers import NetworkInfo 
- 
- 
- 
- 
-from ui import TimelapseUi 
- 
  
 MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30) 
 MIN_BRIGHTNESS = 20000 
@@ -56,41 +49,44 @@ CONFIGS = [(625,100),
 	(6000000,400),
 	(6000000,800)]
 	
-	
-def test_configs():
-    camera = GPhoto(subprocess)
-
-    for config in CONFIGS:
-      camera.set_shutter_speed(secs=config[0])
-      camera.set_iso(iso=str(config[1]))
-      time.sleep(1)
-
 def main():
-    #print "Testing Configs"
-    #test_configs()
-    print "Timelapse"
-    camera = GPhoto(subprocess)
-    idy = Identify(subprocess)
-    netinfo = NetworkInfo(subprocess)
-
-    ui = TimelapseUi()
-
-    current_config = 11
+    print "KH Pi Cam Timelapse"
+#    camera = GPhoto(subprocess)
+    idy = Identify(subprocess) # das ist ImageMagick
+    
+    current_config = (len(CONFIGS) - 1) / 2 # in der Mitte der Einstellungen starten
     shot = 0
     prev_acquired = None
     last_acquired = None
     last_started = None
 
-    network_status = netinfo.network_status()
-    current_config = ui.main(CONFIGS, current_config, network_status)
 
     try:
         while True:
             last_started = datetime.now()
             config = CONFIGS[current_config]
             print "Shot: %d Shutter: %s ISO: %d" % (shot, config[0], config[1])
-            ui.backlight_on()
-            ui.show_status(shot, CONFIGS, current_config)
+            
+            with picamera.PiCamera() as camera:
+                camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
+                camera.exif_tags['IFD0.Copyright'] = 'Copyright (c) 2015 Karsten Hartlieb'
+                camera.resolution = (1296, 730)
+                camera.exposure_mode = 'off'
+                camera.shutter_speed = config[0]
+                camera.iso = config[1]
+                camera.start_preview()
+                #camera.exposure_compensation = 2
+                #camera.exposure_mode = 'spotlight'
+                #camera.meter_mode = 'matrix'
+                #camera.image_effect = 'gpen'
+
+                # Give the camera some time to adjust to conditions
+                time.sleep(2)
+                camera.capture('foo.jpg')
+                camera.stop_preview()
+
+            
+            
             camera.set_shutter_speed(secs=config[0])
             camera.set_iso(iso=str(config[1]))
             ui.backlight_off()
