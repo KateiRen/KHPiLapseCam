@@ -63,8 +63,8 @@ def main():
     last_started = None
 
 # unterordner für die Bilder der Serie mit datetime.now() erstellen
-timestr = time.strftime("%Y%m%d-%H%M%S")
-os.mkdir( timestr, 0755 );
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    os.mkdir( timestr, 0755 );
 
     try:
         while True:
