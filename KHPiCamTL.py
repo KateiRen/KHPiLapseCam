@@ -104,7 +104,7 @@ def main():
                 #...
                 # raspistill -w 1296 -h 730 -ISO 100 --shutter 6000000 -o out.jpg -f -v && sudo fbi -T 1 out.jpg
                 optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" (width, height, config[1], config[0], filename)
-                os.raspistill(timestr);
+                os.raspistill(timestr)
                 
                             
 
