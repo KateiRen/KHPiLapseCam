@@ -1,4 +1,5 @@
 #!/usr/bin/python 
+# -*- coding: latin-1 -*-
 
 # Doku von picamera: http://picamera.readthedocs.org/en/release-1.10/recipes1.html
 
@@ -9,7 +10,7 @@ import subprocess
 import time 
 import picamera
 from wrappers import Identify 
-import os, sys #für mkdir ...
+import os, sys #fuer mkdir ...
  
 MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30) 
 MIN_BRIGHTNESS = 20000 
