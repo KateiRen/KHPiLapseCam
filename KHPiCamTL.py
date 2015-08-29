@@ -70,7 +70,7 @@ def main():
     prev_acquired = None
     last_acquired = None
     last_started = None
-    useraspistill = false
+    useraspistill = False
 
 # unterordner für die Bilder der Serie mit datetime.now() erstellen
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -82,7 +82,7 @@ def main():
             config = CONFIGS[current_config]
             print "Shot: %d Shutter: %s ISO: %d" % (shot, config[0], config[1])
             filename = timestr + '/image%02d.jpg' % shot
-            if useraspistill:
+            if useraspistill == True:
                 with picamera.PiCamera() as camera:
                     camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
                     camera.exif_tags['IFD0.Copyright'] = 'Copyright (c) 2015 Karsten Hartlieb'
