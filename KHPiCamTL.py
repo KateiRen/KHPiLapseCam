@@ -10,7 +10,7 @@
 #irgendwas stimmt da nicht
 # alternativ mit wrapper oder OS call für raspistill probieren....
 # wrapper für mkdir bauen?
-  
+
 from datetime import datetime 
 from datetime import timedelta 
 import subprocess 
