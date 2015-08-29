@@ -9,6 +9,7 @@ import subprocess
 import time 
 import picamera
 from wrappers import Identify 
+import os, sys #für mkdir ...
  
 MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30) 
 MIN_BRIGHTNESS = 20000 
@@ -60,6 +61,9 @@ def main():
     last_acquired = None
     last_started = None
 
+# unterordner für die Bilder der Serie mit datetime.now() erstellen
+timestr = time.strftime("%Y%m%d-%H%M%S")
+os.mkdir( timestr, 0755 );
 
     try:
         while True:
@@ -82,21 +86,11 @@ def main():
 
                 # Give the camera some time to adjust to conditions
                 time.sleep(2)
-                camera.capture('foo.jpg')
+                filename = timestr + '/image%02d.jpg' % shot
+                camera.capture(filename)
                 camera.stop_preview()
+            
 
-            
-            
-            camera.set_shutter_speed(secs=config[0])
-            camera.set_iso(iso=str(config[1]))
-            ui.backlight_off()
-            try:
-              filename = camera.capture_image_and_download()
-            except Exception, e:
-              print "Error on capture." + str(e)
-              print "Retrying..."
-              # Occasionally, capture can fail but retries will be successful.
-              continue
             prev_acquired = last_acquired
             brightness = float(idy.mean_brightness(filename))
             last_acquired = datetime.now()
@@ -114,7 +108,7 @@ def main():
                     time.sleep((MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started)).seconds)
             shot = shot + 1
     except Exception,e:
-        ui.show_error(str(e))
+        print str(e)
 
 
 if __name__ == "__main__":
