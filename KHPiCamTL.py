@@ -64,40 +64,49 @@ def main():
     idy = Identify(subprocess) # das ist ImageMagick
     
     current_config = (len(CONFIGS) - 1) / 2 # in der Mitte der Einstellungen starten
+    width = 1296
+    height = 730
     shot = 0
     prev_acquired = None
     last_acquired = None
     last_started = None
+    useraspistill = false
 
 # unterordner für die Bilder der Serie mit datetime.now() erstellen
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    os.mkdir( timestr, 0755 );
+    os.mkdir(timestr, 0755 );
 
     try:
         while True:
             last_started = datetime.now()
             config = CONFIGS[current_config]
             print "Shot: %d Shutter: %s ISO: %d" % (shot, config[0], config[1])
-            
-            with picamera.PiCamera() as camera:
-                camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
-                camera.exif_tags['IFD0.Copyright'] = 'Copyright (c) 2015 Karsten Hartlieb'
-                camera.resolution = (1296, 730)
-                camera.exposure_mode = 'off'
-                camera.shutter_speed = config[0]
-                camera.iso = config[1]
-                camera.start_preview()
-                #camera.exposure_compensation = 2
-                #camera.exposure_mode = 'spotlight'
-                #camera.meter_mode = 'matrix'
-                #camera.image_effect = 'gpen'
-
-                # Give the camera some time to adjust to conditions
-                time.sleep(2)
-                filename = timestr + '/image%02d.jpg' % shot
-                camera.capture(filename)
-                camera.stop_preview()
-            
+            filename = timestr + '/image%02d.jpg' % shot
+            if useraspistill:
+                with picamera.PiCamera() as camera:
+                    camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
+                    camera.exif_tags['IFD0.Copyright'] = 'Copyright (c) 2015 Karsten Hartlieb'
+                    camera.resolution = (width, height)
+                    camera.exposure_mode = 'off'
+                    camera.shutter_speed = config[0]
+                    camera.iso = config[1]
+                    camera.start_preview()
+                    #camera.exposure_compensation = 2
+                    #camera.exposure_mode = 'spotlight'
+                    #camera.meter_mode = 'matrix'
+                    #camera.image_effect = 'gpen'
+    
+                    # Give the camera some time to adjust to conditions
+                    time.sleep(2)
+                    camera.capture(filename)
+                    camera.stop_preview()
+            else:
+                #...
+                # raspistill -w 1296 -h 730 -ISO 100 --shutter 6000000 -o out.jpg -f -v && sudo fbi -T 1 out.jpg
+                optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" (width, height, config[1], config[0], filename)
+                os.raspistill(timestr);
+                
+                            
 
             prev_acquired = last_acquired
             brightness = float(idy.mean_brightness(filename))
