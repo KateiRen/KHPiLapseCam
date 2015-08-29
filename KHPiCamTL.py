@@ -3,6 +3,13 @@
 
 # Doku von picamera: http://picamera.readthedocs.org/en/release-1.10/recipes1.html
 
+#Shot: 25 Shutter: 6000000 ISO: 800
+#-> 20150830-004414/image25.jpg 6254.36
+#==> ergibt in der Datei
+# 1/30 Sekunde mit ISO 6
+#irgendwas stimmt da nicht
+# alternativ mit wrapper oder OS call für raspistill probieren....
+# wrapper für mkdir bauen?
   
 from datetime import datetime 
 from datetime import timedelta 
@@ -96,7 +103,7 @@ def main():
             brightness = float(idy.mean_brightness(filename))
             last_acquired = datetime.now()
 
-            print "-> %s %s" % (filename, brightness)
+            print "-> Datei: %s Helligkeit: %s" % (filename, brightness)
 
             if brightness < MIN_BRIGHTNESS and current_config < len(CONFIGS) - 1:
                 current_config = current_config + 1
