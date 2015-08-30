@@ -81,7 +81,7 @@ def main():
     prev_acquired = None
     last_acquired = None
     last_started = None
-    useraspistill = False
+    useraspistill = True
 
 # unterordner für die Bilder der Serie mit datetime.now() erstellen
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -93,7 +93,7 @@ def main():
             config = CONFIGS[current_config]
             print "Auslösung: %d Belichtungszeit: %2f sek ISO: %d" % (shot, config[0]/1000000, config[1])
             filename = timestr + '/image%02d.jpg' % shot
-            if useraspistill == True:
+            if useraspistill == False:
                 with picamera.PiCamera() as camera:
                     camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
                     camera.exif_tags['IFD0.Copyright'] = 'Copyright (c) 2015 Karsten Hartlieb'
@@ -115,7 +115,8 @@ def main():
                 #...
                 # raspistill -w 1296 -h 730 -ISO 100 --shutter 6000000 -o out.jpg -f -v && sudo fbi -T 1 out.jpg
                 optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" (width, height, config[1], config[0], filename)
-                os.raspistill(timestr)
+                print optionstring
+                os.raspistill(optionstring)
                 
                             
 
