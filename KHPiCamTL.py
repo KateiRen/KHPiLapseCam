@@ -8,8 +8,7 @@
 #==> ergibt in der Datei
 # 1/30 Sekunde mit ISO 6
 #irgendwas stimmt da nicht
-# alternativ mit wrapper oder OS call für raspistill probieren....
-# wrapper für mkdir bauen?
+# alternativ mit raspistill probieren....
 
 # Optionen für Framerate und End-Dauer des Videos und Dauer der Aufnahme als Basis für Delay und Max_Shots
 
@@ -26,10 +25,11 @@ import argparse # siehe http://stackoverflow.com/questions/14097061/easier-way-t
 MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30) 
 MIN_BRIGHTNESS = 20000 
 MAX_BRIGHTNESS = 30000 
+MAX_SHOTS = 60
 
-DOPOSTPROCESSING = False
+DOPOSTPROCESSING = True
 VERBOSEMODE = True
-USERASPISTILL = False
+USERASPISTILL = True
 DISPLAYONTFT = True
 
 # Wertepaare für Belichtungsdauer (Mikrosekunden) und ISO
@@ -70,13 +70,12 @@ CONFIGS = [(625,100),
 
 def main():
     
-    
-    logging.basicConfig(level=logging.DEBUG)
-    
-    print "KH Pi Cam Timelapse"
-#    camera = GPhoto(subprocess)
     idy = Identify(subprocess) # das ist ImageMagick
-    
+    logging.basicConfig(level=logging.DEBUG)
+    print "#######################"
+    print "# KH Pi Cam Timelapse #"
+    print "#######################"
+	
     current_config = int((len(CONFIGS)-1)/2) # in der Mitte der Einstellungen starten
     width = 1296
     height = 730
@@ -84,14 +83,13 @@ def main():
     prev_acquired = None
     last_acquired = None
     last_started = None
-    useraspistill = True
-
+    
 # Unterordner für die Bilder der Serie mit datetime.now() erstellen
     timestr = time.strftime("%Y%m%d-%H%M%S")
     os.mkdir(timestr, 0755 );
 
     try:
-        while True:
+        while shot < MAX_SHOTS:
             last_started = datetime.now()
             config = CONFIGS[current_config]
             print "Auslösung: %d Belichtungszeit :%.2f sek ISO: %d" % (shot, float(config[0])/1000000, config[1])
@@ -141,14 +139,15 @@ def main():
             
             # Wenn gewünscht, jedes Bild nach dem Schießen auf dem TFT anzeigen
             if DISPLAYONTFT == True:
-                os.system("fbi -T 1 %s") % filename
+                os.system("fbi -a -T 1 " +filename)
 
     except Exception,e:
         print str(e)
 
     # Wenn gewünscht, nach dem Schießen der Einzelbilder gleich als Video zusammensetzen        
     if DOPOSTPROCESSING == True:
-        os.system("sudo avconv -r 15 -i %s/image\%05d.jpg -codec libx264 time-lapse.mp4") % timestr
+        #os.system("sudo avconv -r 15 -i %s/image\%05d.jpg -codec libx264 time-lapse.mp4") % timestr
+		os.system("sudo avconv -y -r 24 -i %s/image\%05d.jpg -an -vcodec libx264 -q:v 1 time-lapse.mp4") % timestr
 
  
 
