@@ -85,7 +85,7 @@ def main():
         while True:
             last_started = datetime.now()
             config = CONFIGS[current_config]
-            print "Shot: %d Shutter: %s ISO: %d" % (shot, config[0], config[1])
+            print "Auslösung: %d Belichtungszeit: %2f sek ISO: %d" % (shot, config[0]/1000000, config[1])
             filename = timestr + '/image%02d.jpg' % shot
             if useraspistill == True:
                 with picamera.PiCamera() as camera:
@@ -125,7 +125,8 @@ def main():
                 current_config = current_config - 1
             else:
                 if last_started and last_acquired and last_acquired - last_started < MIN_INTER_SHOT_DELAY_SECONDS:
-                    print "Sleeping for %s" % str(MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
+                    #print "Sleeping for %s" % str(MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
+                    print "Sleeping for %s" % (MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started)
 
                     time.sleep((MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started)).seconds)
             shot = shot + 1
