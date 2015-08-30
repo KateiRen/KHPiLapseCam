@@ -27,7 +27,9 @@ MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30)
 MIN_BRIGHTNESS = 20000 
 MAX_BRIGHTNESS = 30000 
 
-useraspistill = False
+DOPOSTPROCESSING = False
+VERBOSEMODE = False
+USERASPISTILL = False
 
 # Wertepaare für Belichtungsdauer (Mikrosekunden) und ISO
 CONFIGS = [(625,100),
@@ -94,7 +96,7 @@ def main():
             print "Auslösung: %d Belichtungszeit :%.2f sek ISO: %d" % (shot, float(config[0])/1000000, config[1])
             filename = timestr + '/image%05d.jpg' % shot
             print "filename %s" % filename
-            if useraspistill == False:
+            if USERASPISTILL == False:
                 with picamera.PiCamera() as camera:
                     camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
                     camera.exif_tags['IFD0.Copyright'] = 'Copyright (c) 2015 Karsten Hartlieb'
@@ -103,24 +105,16 @@ def main():
                     camera.shutter_speed = config[0]
                     camera.iso = config[1]
                     camera.start_preview()
-                    #camera.exposure_compensation = 2
-                    #camera.exposure_mode = 'spotlight'
-                    #camera.meter_mode = 'matrix'
-                    #camera.image_effect = 'gpen'
-    
                     # Give the camera some time to adjust to conditions
                     time.sleep(2)
                     camera.capture(filename)
                     camera.stop_preview()
             else:
-                #...
-                # raspistill -w 1296 -h 730 -ISO 100 --shutter 6000000 -o out.jpg -f -v && sudo fbi -T 1 out.jpg
-                print "baue optionstring"
                 optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
-                print optionstring
+                if VERBOSEMODE == True:
+                    print optionstring
                 os.system("raspistill " + optionstring)
                 
-                            
 
             prev_acquired = last_acquired
             brightness = float(idy.mean_brightness(filename))
@@ -130,17 +124,24 @@ def main():
 
             if brightness < MIN_BRIGHTNESS and current_config < len(CONFIGS) - 1:
                 current_config = current_config + 1
+                if VERBOSEMODE == True:
+                    print "Mittlere Helligkeit=%.2f, erhöhe Belichtungszeit/ISO"
             elif brightness > MAX_BRIGHTNESS and current_config > 0:
                 current_config = current_config - 1
+                if VERBOSEMODE == True:
+                    print "Mittlere Helligkeit=%.2f, erhöhe Belichtungszeit/ISO"
             else:
                 if last_started and last_acquired and last_acquired - last_started < MIN_INTER_SHOT_DELAY_SECONDS:
                     #print "Sleeping for %s" % str(MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
                     print "Sleeping for %s" % (MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
-
                     time.sleep((MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started)).seconds)
             shot = shot + 1
     except Exception,e:
         print str(e)
+        
+    if DOPOSTPROCESSING = True:
+            os.system("sudo avconv -r 15 -i %s/image\%05d.jpg -codec libx264 time-lapse.mp4") % timestr
+
 
 
 if __name__ == "__main__":
