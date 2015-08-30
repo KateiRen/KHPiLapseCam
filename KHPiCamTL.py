@@ -27,7 +27,7 @@ MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30)
 MIN_BRIGHTNESS = 20000 
 MAX_BRIGHTNESS = 30000 
 
-useraspistill = True
+useraspistill = False
 
 # Wertepaare für Belichtungsdauer (Mikrosekunden) und ISO
 CONFIGS = [(625,100),
@@ -64,7 +64,7 @@ CONFIGS = [(625,100),
 	(6000000,200),
 	(6000000,400),
 	(6000000,800)]
-	
+
 def main():
     
     
@@ -74,7 +74,7 @@ def main():
 #    camera = GPhoto(subprocess)
     idy = Identify(subprocess) # das ist ImageMagick
     
-    current_config = (len(CONFIGS) - 1) / 2 # in der Mitte der Einstellungen starten
+    current_config = int((len(CONFIGS)-1)/2) # in der Mitte der Einstellungen starten
     width = 1296
     height = 730
     shot = 0
@@ -83,7 +83,7 @@ def main():
     last_started = None
     useraspistill = True
 
-# unterordner für die Bilder der Serie mit datetime.now() erstellen
+# Unterordner für die Bilder der Serie mit datetime.now() erstellen
     timestr = time.strftime("%Y%m%d-%H%M%S")
     os.mkdir(timestr, 0755 );
 
@@ -91,8 +91,9 @@ def main():
         while True:
             last_started = datetime.now()
             config = CONFIGS[current_config]
-            print "Auslösung: %d Belichtungszeit: %2f sek ISO: %d" % (shot, config[0]/1000000, config[1])
-            filename = timestr + '/image%02d.jpg' % shot
+            print "Auslösung: %d Belichtungszeit :%.2f sek ISO: %d" % (shot, float(config[0])/1000000, config[1])
+            filename = timestr + '/image%05d.jpg' % shot
+            print "filename %s" % filename
             if useraspistill == False:
                 with picamera.PiCamera() as camera:
                     camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
@@ -114,9 +115,10 @@ def main():
             else:
                 #...
                 # raspistill -w 1296 -h 730 -ISO 100 --shutter 6000000 -o out.jpg -f -v && sudo fbi -T 1 out.jpg
-                optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" (width, height, config[1], config[0], filename)
+                print "baue optionstring"
+                optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
                 print optionstring
-                os.raspistill(optionstring)
+                os.system("raspistill " + optionstring)
                 
                             
 
