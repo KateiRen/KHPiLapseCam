@@ -11,6 +11,8 @@
 # alternativ mit wrapper oder OS call für raspistill probieren....
 # wrapper für mkdir bauen?
 
+# Optionen für Framerate und End-Dauer des Videos und Dauer der Aufnahme als Basis für Delay und Max_Shots
+
 from datetime import datetime 
 from datetime import timedelta 
 import subprocess 
@@ -23,6 +25,9 @@ MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30)
 MIN_BRIGHTNESS = 20000 
 MAX_BRIGHTNESS = 30000 
 
+useraspistill = True
+
+# Wertepaare für Belichtungsdauer (Mikrosekunden) und ISO
 CONFIGS = [(625,100),
 	(1000,100),
 	(1250,100),
