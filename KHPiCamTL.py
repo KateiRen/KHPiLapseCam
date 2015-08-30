@@ -28,7 +28,7 @@ MIN_BRIGHTNESS = 20000
 MAX_BRIGHTNESS = 30000 
 
 DOPOSTPROCESSING = False
-VERBOSEMODE = False
+VERBOSEMODE = True
 USERASPISTILL = False
 
 # Wertepaare für Belichtungsdauer (Mikrosekunden) und ISO
@@ -112,6 +112,7 @@ def main():
             else:
                 optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
                 if VERBOSEMODE == True:
+                    optionstring = "-w %d -h %d -v -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
                     print optionstring
                 os.system("raspistill " + optionstring)
                 
@@ -132,8 +133,8 @@ def main():
                     print "Mittlere Helligkeit=%.2f, erhöhe Belichtungszeit/ISO"
             else:
                 if last_started and last_acquired and last_acquired - last_started < MIN_INTER_SHOT_DELAY_SECONDS:
-                    #print "Sleeping for %s" % str(MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
-                    print "Sleeping for %s" % (MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
+                    print "Sleeping for %s" % str(MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
+                    #print "Sleeping for %s" % (MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
                     time.sleep((MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started)).seconds)
             shot = shot + 1
     except Exception,e:
