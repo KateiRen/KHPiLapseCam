@@ -20,6 +20,8 @@ import time
 import picamera
 from wrappers import Identify 
 import os, sys #fuer mkdir ...
+import logging
+import argparse # siehe http://stackoverflow.com/questions/14097061/easier-way-to-enable-verbose-logging implementieren
  
 MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30) 
 MIN_BRIGHTNESS = 20000 
@@ -64,6 +66,10 @@ CONFIGS = [(625,100),
 	(6000000,800)]
 	
 def main():
+    
+    
+    logging.basicConfig(level=logging.DEBUG)
+    
     print "KH Pi Cam Timelapse"
 #    camera = GPhoto(subprocess)
     idy = Identify(subprocess) # das ist ImageMagick
