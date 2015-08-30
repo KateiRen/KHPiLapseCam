@@ -140,7 +140,7 @@ def main():
     except Exception,e:
         print str(e)
         
-    if DOPOSTPROCESSING = True:
+    if DOPOSTPROCESSING == True:
             os.system("sudo avconv -r 15 -i %s/image\%05d.jpg -codec libx264 time-lapse.mp4") % timestr
 
 
