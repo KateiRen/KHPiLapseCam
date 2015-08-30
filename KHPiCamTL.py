@@ -30,6 +30,7 @@ MAX_BRIGHTNESS = 30000
 DOPOSTPROCESSING = False
 VERBOSEMODE = True
 USERASPISTILL = False
+DISPLAYONTFT = True
 
 # Wertepaare für Belichtungsdauer (Mikrosekunden) und ISO
 CONFIGS = [(625,100),
@@ -137,13 +138,19 @@ def main():
                     #print "Sleeping for %s" % (MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
                     time.sleep((MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started)).seconds)
             shot = shot + 1
+            
+            # Wenn gewünscht, jedes Bild nach dem Schießen auf dem TFT anzeigen
+            if DISPLAYONTFT == True:
+                os.system("fbi -T 1 %s") %filename
+
     except Exception,e:
         print str(e)
-        
+
+    # Wenn gewünscht, nach dem Schießen der Einzelbilder gleich als Video zusammensetzen        
     if DOPOSTPROCESSING == True:
-            os.system("sudo avconv -r 15 -i %s/image\%05d.jpg -codec libx264 time-lapse.mp4") % timestr
+        os.system("sudo avconv -r 15 -i %s/image\%05d.jpg -codec libx264 time-lapse.mp4") % timestr
 
-
+ 
 
 if __name__ == "__main__":
     main()
