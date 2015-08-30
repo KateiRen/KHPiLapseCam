@@ -127,11 +127,11 @@ def main():
             if brightness < MIN_BRIGHTNESS and current_config < len(CONFIGS) - 1:
                 current_config = current_config + 1
                 if VERBOSEMODE == True:
-                    print "Mittlere Helligkeit=%.2f, erhöhe Belichtungszeit/ISO"
+                    print "Mittlere Helligkeit=%0.2f, erhöhe Belichtungszeit/ISO" %brightness
             elif brightness > MAX_BRIGHTNESS and current_config > 0:
                 current_config = current_config - 1
                 if VERBOSEMODE == True:
-                    print "Mittlere Helligkeit=%.2f, erhöhe Belichtungszeit/ISO"
+                    print "Mittlere Helligkeit=%0.2f, erhöhe Belichtungszeit/ISO" %brightness
             else:
                 if last_started and last_acquired and last_acquired - last_started < MIN_INTER_SHOT_DELAY_SECONDS:
                     print "Sleeping for %s" % str(MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
@@ -141,7 +141,7 @@ def main():
             
             # Wenn gewünscht, jedes Bild nach dem Schießen auf dem TFT anzeigen
             if DISPLAYONTFT == True:
-                os.system("fbi -T 1 %s") %filename
+                os.system("fbi -T 1 %s") % filename
 
     except Exception,e:
         print str(e)
