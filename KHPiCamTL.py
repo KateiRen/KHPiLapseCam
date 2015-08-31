@@ -21,7 +21,7 @@ from wrappers import Identify
 import os, sys #fuer mkdir ...
 import logging
 import argparse # siehe http://stackoverflow.com/questions/14097061/easier-way-to-enable-verbose-logging implementieren
-
+import CameraSettings.py
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--verbose", help="increase output verbosity",
@@ -31,53 +31,24 @@ parser.parse_args()
 MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30) 
 MIN_BRIGHTNESS = 20000 
 MAX_BRIGHTNESS = 30000 
-MAX_SHOTS = 60
 
-DOPOSTPROCESSING = True
-VERBOSEMODE = True
-USERASPISTILL = True
-DISPLAYONTFT = True
+dopostprocessing = True
+dodeflicker = True
+verbosemode = True
+useraspistill = True
+displaycapturedimages = True
 
-# Wertepaare für Belichtungsdauer (Mikrosekunden) und ISO
-CONFIGS = [(625,100),
-	(1000,100),
-	(1250,100),
-	(2000,100),
-	(3125,100),
-	(4000,100),
-	(5000,100),
-	(6250,100),
-	(10000,100),
-	(12500,100),
-	(16667,100),
-	(20000,100),
-	(25000,100),
-	(33333,100),
-	(50000,100),
-	(66667,100),
-	(76923,100),
-	(100000,100),
-	(166667,100),
-	(200000,100),
-	(250000,100),
-	(300000,100),
-	(500000,100),
-	(600000,100),
-	(800000,100),
-	(1000000,100),
-	(1600000,100),
-	(2500000,100),
-	(3200000,100),
-	(4000000,100),
-	(6000000,100),
-	(6000000,200),
-	(6000000,400),
-	(6000000,800)]
+fps = 24
+videolength = 2 # Minutes
+capturelength = 30 # Minutes
+totalshots = videolength * 60 * fps
+intershotdelay = timedelta(seconds=capturelength * 60 / totalshots) # intershotdelay unit = timedelta in seconds
 
 def main():
     
     idy = Identify(subprocess) # das ist ImageMagick
-    logging.basicConfig(level=logging.DEBUG)
+    if verbosemode==True:
+        logging.basicConfig(level=logging.DEBUG)
     print "#######################"
     print "# KH Pi Cam Timelapse #"
     print "#######################"
@@ -92,16 +63,17 @@ def main():
     
 # Unterordner für die Bilder der Serie mit datetime.now() erstellen
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    os.mkdir(timestr, 0755 );
+    os.mkdir(timestr, 0755 )
+    print "Bild Nummer | Belichtungszeit | ISO | Helligkeit"
 
     try:
-        while shot < MAX_SHOTS:
+        while shot < totalshots:
             last_started = datetime.now()
             config = CONFIGS[current_config]
-            print "Auslösung: %d Belichtungszeit :%.2f sek ISO: %d" % (shot, float(config[0])/1000000, config[1])
+            #print "Auslösung: %d Belichtungszeit :%.2f sek ISO: %d" % (shot, float(config[0])/1000000, config[1])
             filename = timestr + '/image%05d.jpg' % shot
-            print "filename %s" % filename
-            if USERASPISTILL == False:
+            #print "filename %s" % filename
+            if useraspistill == False:
                 with picamera.PiCamera() as camera:
                     camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
                     camera.exif_tags['IFD0.Copyright'] = 'Copyright (c) 2015 Karsten Hartlieb'
@@ -116,7 +88,7 @@ def main():
                     camera.stop_preview()
             else:
                 optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
-                if VERBOSEMODE == True:
+                if verbosemode == True:
                     optionstring = "-w %d -h %d -v -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
                     print optionstring
                 os.system("raspistill " + optionstring)
@@ -125,35 +97,44 @@ def main():
             prev_acquired = last_acquired
             brightness = float(idy.mean_brightness(filename))
             last_acquired = datetime.now()
-
-            print "-> Datei: %s Helligkeit: %s" % (filename, brightness)
+            
+            #print "Bild Nummer | Belichtungszeit | ISO | Helligkeit"
+            print "      %05d |      %.2f sek | %d | %s " % (shot, float(config[0])/1000000, config[1], brightness)
+            #print "-> Datei: %s Helligkeit: %s" % (filename, brightness)
 
             if brightness < MIN_BRIGHTNESS and current_config < len(CONFIGS) - 1:
                 current_config = current_config + 1
-                if VERBOSEMODE == True:
+                if verbosemode == True:
                     print "Mittlere Helligkeit=%0.2f, erhöhe Belichtungszeit/ISO" %brightness
             elif brightness > MAX_BRIGHTNESS and current_config > 0:
                 current_config = current_config - 1
-                if VERBOSEMODE == True:
+                if verbosemode == True:
                     print "Mittlere Helligkeit=%0.2f, erhöhe Belichtungszeit/ISO" %brightness
             else:
-                if last_started and last_acquired and last_acquired - last_started < MIN_INTER_SHOT_DELAY_SECONDS:
-                    print "Sleeping for %s" % str(MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
+                if last_started and last_acquired and last_acquired - last_started < intershotdelay:
+                    print "Sleeping for %s" % str(intershotdelay - (last_acquired - last_started))
                     #print "Sleeping for %s" % (MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
-                    time.sleep((MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started)).seconds)
+                    time.sleep((intershotdelay - (last_acquired - last_started)).seconds)
             shot = shot + 1
             
             # Wenn gewünscht, jedes Bild nach dem Schießen auf dem TFT anzeigen
-            if DISPLAYONTFT == True:
+            if displaycapturedimages == True:
                 os.system("fbi -a -T 1 " +filename)
 
     except Exception,e:
         print str(e)
+        
+    print "\nEnde der Aufnahmephase\n"
 
+     
     # Wenn gewünscht, nach dem Schießen der Einzelbilder gleich als Video zusammensetzen        
-    if DOPOSTPROCESSING == True:
+    if dopostprocessing == True:
         #os.system("sudo avconv -r 15 -i %s/image\%05d.jpg -codec libx264 time-lapse.mp4") % timestr
-		os.system("sudo avconv -y -r 24 -i %s/image\%05d.jpg -an -vcodec libx264 -q:v 1 time-lapse.mp4") % timestr
+		if dodeflicker == True:
+            print "Starte De-Flicker Post-Processing"
+            os.systems("for a in "+timestr+"/*.jpg; do echo $a;mogrify -auto-gamma $a;done")
+        print "Starte Erstellung des Videos"
+        os.system("sudo avconv -y -r 24 -i %s/image\%05d.jpg -an -vcodec libx264 -q:v 1 time-lapse.mp4") % timestr
 
  
 
