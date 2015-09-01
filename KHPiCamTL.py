@@ -12,6 +12,10 @@
 
 # Optionen für Framerate und End-Dauer des Videos und Dauer der Aufnahme als Basis für Delay und Max_Shots
 
+# Ueberschrift auf alle 20 Zeilen aendern
+# beim ersten Mal wird es doppel angezeigt
+
+
 from datetime import datetime 
 from datetime import timedelta 
 import subprocess 
@@ -21,7 +25,8 @@ from wrappers import Identify
 import os, sys #fuer mkdir ...
 import logging
 import argparse # siehe http://stackoverflow.com/questions/14097061/easier-way-to-enable-verbose-logging implementieren
-import CameraSettings.py
+import CameraSettings
+CONFIGS = CameraSettings.CONFIGS
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--verbose", help="increase output verbosity",
@@ -33,14 +38,16 @@ MIN_BRIGHTNESS = 20000
 MAX_BRIGHTNESS = 30000 
 
 dopostprocessing = True
-dodeflicker = True
-verbosemode = True
+dodeflicker = False
+verbosemode = False
 useraspistill = True
-displaycapturedimages = True
+displaycapturedimages = False
 
-fps = 24
-videolength = 2 # Minutes
-capturelength = 30 # Minutes
+# Startzeit abspeichern und am Ende mit der Endzeit anzeigen
+
+fps = 1
+videolength = 1 # Minutes
+capturelength = 1 # Minutes
 totalshots = videolength * 60 * fps
 intershotdelay = timedelta(seconds=capturelength * 60 / totalshots) # intershotdelay unit = timedelta in seconds
 
@@ -52,6 +59,8 @@ def main():
     print "#######################"
     print "# KH Pi Cam Timelapse #"
     print "#######################"
+    print "\nAufnahmedauer: %d Minuten" % capturelength
+    print "Anzahl Aufnahmen: %d" % totalshots
 	
     current_config = int((len(CONFIGS)-1)/2) # in der Mitte der Einstellungen starten
     width = 1296
@@ -64,8 +73,7 @@ def main():
 # Unterordner für die Bilder der Serie mit datetime.now() erstellen
     timestr = time.strftime("%Y%m%d-%H%M%S")
     os.mkdir(timestr, 0755 )
-    print "Bild Nummer | Belichtungszeit | ISO | Helligkeit"
-
+    
     try:
         while shot < totalshots:
             last_started = datetime.now()
@@ -87,9 +95,9 @@ def main():
                     camera.capture(filename)
                     camera.stop_preview()
             else:
-                optionstring = "-w %d -h %d -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
+                optionstring = "-w %d -h %d -t 1 -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
                 if verbosemode == True:
-                    optionstring = "-w %d -h %d -v -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
+                    optionstring = "-w %d -h %d -v -t 1 -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
                     print optionstring
                 os.system("raspistill " + optionstring)
                 
@@ -98,8 +106,11 @@ def main():
             brightness = float(idy.mean_brightness(filename))
             last_acquired = datetime.now()
             
-            #print "Bild Nummer | Belichtungszeit | ISO | Helligkeit"
-            print "      %05d |      %.2f sek | %d | %s " % (shot, float(config[0])/1000000, config[1], brightness)
+            if shot%20 == 0:
+				# alle paar Zeilen die Überschrift widerholen
+				print "Bild Nummer | Belichtungszeit | ISO | Helligkeit"
+				print "------------------------------------------------"
+            print "      %05d |      %.2f sek   | %d | %s " % (shot, float(config[0])/1000000, config[1], brightness)
             #print "-> Datei: %s Helligkeit: %s" % (filename, brightness)
 
             if brightness < MIN_BRIGHTNESS and current_config < len(CONFIGS) - 1:
@@ -112,29 +123,40 @@ def main():
                     print "Mittlere Helligkeit=%0.2f, erhöhe Belichtungszeit/ISO" %brightness
             else:
                 if last_started and last_acquired and last_acquired - last_started < intershotdelay:
-                    print "Sleeping for %s" % str(intershotdelay - (last_acquired - last_started))
-                    #print "Sleeping for %s" % (MIN_INTER_SHOT_DELAY_SECONDS - (last_acquired - last_started))
+                    if verbosemode==True:
+					    print "Sleeping for %s" % str(intershotdelay - (last_acquired - last_started))
+                    
                     time.sleep((intershotdelay - (last_acquired - last_started)).seconds)
             shot = shot + 1
             
-            # Wenn gewünscht, jedes Bild nach dem Schießen auf dem TFT anzeigen
+            # Wenn gewünscht, jedes Bild nach dem Schießen auf dem TFT anzeigen aber Konsolen-Ausgabe unterdrücken
             if displaycapturedimages == True:
-                os.system("fbi -a -T 1 " +filename)
+                # hier wird jedesmal ein neuer Prozess gestartet, wie kann man das verhindern?
+                os.system("fbi -a -T 1 " +filename + " 2> /dev/null")
 
     except Exception,e:
         print str(e)
-        
+	
+    if displaycapturedimages == True:
+        # Ausgabe wieder auf Terminal zurückbiegen
+        # klappt das?
+        os.system("con2bmap 1 1")
     print "\nEnde der Aufnahmephase\n"
-
+	
+	#weil das Skript mit SU läuft, gehören auch alle Files root, das korrigieren wir mal schnell noch
+    os.system("chown -R pi " + timestr)
      
     # Wenn gewünscht, nach dem Schießen der Einzelbilder gleich als Video zusammensetzen        
     if dopostprocessing == True:
-        #os.system("sudo avconv -r 15 -i %s/image\%05d.jpg -codec libx264 time-lapse.mp4") % timestr
-		if dodeflicker == True:
+        if dodeflicker == True:
             print "Starte De-Flicker Post-Processing"
-            os.systems("for a in "+timestr+"/*.jpg; do echo $a;mogrify -auto-gamma $a;done")
+            commandstring = "for a in "+timestr+"/*.jpg; do echo $a;mogrify -auto-gamma $a;done"
+            print commandstring
+            os.system(commandstring)
         print "Starte Erstellung des Videos"
-        os.system("sudo avconv -y -r 24 -i %s/image\%05d.jpg -an -vcodec libx264 -q:v 1 time-lapse.mp4") % timestr
+        commandstring = "sudo avconv -y -r 24 -i %s/image\%05d.jpg -an -vcodec libx264 -q:v 1 time-lapse.mp4" %  timestr
+        print commandstring
+        os.system(commandstring)
 
  
 

@@ -1,5 +1,6 @@
 # -*- coding: latin-1 -*-
 # Wertepaare für Belichtungsdauer (Mikrosekunden) und ISO
+ 
 CONFIGS = [(625,100),
 	(1000,100),
 	(1250,100),
