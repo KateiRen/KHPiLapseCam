@@ -108,7 +108,7 @@ def main():
             
             if shot%20 == 0:
 				# alle paar Zeilen die Überschrift widerholen
-				print "Bild Nummer | Belichtungszeit | ISO | Helligkeit"
+				print "\nBild Nummer | Belichtungszeit | ISO | Helligkeit"
 				print "------------------------------------------------"
             print "      %05d |      %.2f sek   | %d | %s " % (shot, float(config[0])/1000000, config[1], brightness)
             #print "-> Datei: %s Helligkeit: %s" % (filename, brightness)
