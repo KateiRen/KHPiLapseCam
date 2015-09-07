@@ -36,8 +36,8 @@ MIN_INTER_SHOT_DELAY_SECONDS = timedelta(seconds=30)
 MIN_BRIGHTNESS = 20000 
 MAX_BRIGHTNESS = 30000 
 
-dovideoencoding = True
-dodeflicker = True
+dovideoencoding = False
+dodeflicker = False
 verbosemode = False
 useraspistill = True
 displaycapturedimages = False
@@ -45,7 +45,7 @@ displaycapturedimages = False
 
 fps = 12
 videolength = 0.5 # Minutes
-capturelength = 30 # Minutes
+capturelength = 10 # Minutes
 totalshots = videolength * 60 * fps
 #intershotdelay = timedelta(seconds=capturelength * 60 / totalshots) # intershotdelay unit = timedelta in seconds
 intershotdelay = capturelength * 60 / totalshots # [Sekunden]
@@ -88,17 +88,17 @@ def main():
                     camera.exif_tags['IFD0.Copyright'] = 'Copyright (c) 2015 Karsten Hartlieb'
                     camera.resolution = (width, height)
                     camera.exposure_mode = 'off'
-                    camera.shutter_speed = config[0]
-                    camera.iso = config[1]
+                    camera.shutter_speed = config[2]
+                    camera.iso = config[0]
                     camera.start_preview()
                     # Give the camera some time to adjust to conditions
                     time.sleep(2)
                     camera.capture(filename)
                     camera.stop_preview()
             else:
-                optionstring = "-w %d -h %d -t 1 -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
+                optionstring = "-w %d -h %d -t 1 -ISO %d --shutter %d -o %s" % (width, height, config[0], config[2], filename)
                 if verbosemode == True:
-                    optionstring = "-w %d -h %d -v -t 1 -ISO %d --shutter %d -o %s" % (width, height, config[1], config[0], filename)
+                    optionstring = "-w %d -h %d -v -t 1 -ISO %d --shutter %d -o %s" % (width, height, config[0], config[2], filename)
                     print optionstring
                 os.system("raspistill " + optionstring)
                 
@@ -109,9 +109,10 @@ def main():
             
             if shot%20 == 0:
                 # alle paar Zeilen die Überschrift widerholen
-                print "\nBild Nr.| Belichtungszeit | ISO | Helligkeit | Kommentar"
+                print "\nBildNr.| Shutter  | ISO | Helligkeit | Kommentar"
                 print "------------------------------------------------------------"
-            print "  %05d |      %.2f sek   | %d | %s | %s" % (shot, float(config[0])/1000000, config[1], brightness, comment)
+            #print " %05d |      %.2f sek   | %d |    %s  | %s" % (shot, float(config[0])/1000000, config[1], brightness, comment)
+            print " %05d | %s | %d |      %5.0f | %s" % (shot, config[1], config[0], brightness, comment)
 
             if brightness < MIN_BRIGHTNESS and current_config < len(CONFIGS) - 1:
                 current_config = current_config + 1
@@ -174,7 +175,7 @@ def main():
         print "\nStarte Erstellung des Videos\n"
         #commandstring = "sudo avconv -y -r 24 -i %s/image\%05d.jpg -an -vcodec libx264 -q:v 1 time-lapse.mp4" %  timestr
         #commandstring = "sudo avconv -y -r 24 -i " + timestr +"/image\%05d.jpg -an -vcodec libx264 -q:v 1 time-lapse.mp4"
-        commandstring = "sudo avconv -y -r 24 -i " + timestr +"/image%05d.jpg -an -vcodec libx264 -q:v 1 " + timestr + "/time-lapse.mp4"
+        commandstring = "sudo avconv -y -r 24 -i " + timestr +"/image%05d.jpg -an -vcodec libx264 -q:v 1 " + timestr + "/" + timestr + "_time-lapse.mp4"
         print commandstring
         os.system(commandstring)
 
