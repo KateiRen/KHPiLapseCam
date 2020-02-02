@@ -1,6 +1,8 @@
 #!/usr/bin/python 
 # -*- coding: latin-1 -*-
 
+#nohup python KHPiCamTLMQTT.py &
+
 # Doku von picamera: http://picamera.readthedocs.org/en/release-1.10/recipes1.html
 
 #Shot: 25 Shutter: 6000000 ISO: 800
