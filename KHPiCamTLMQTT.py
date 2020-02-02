@@ -46,12 +46,12 @@ verbosemode = False
 useraspistill = True
 displaycapturedimages = False
 
-fps = 12
-videolength = 0.1 # Minutes
-capturelength = 10 # Minutes
-# fps = 24
-# videolength = 1 # Minutes
-# capturelength = 11520 # Minutes
+# fps = 12
+# videolength = 0.1 # Minutes
+# capturelength = 10 # Minutes
+fps = 24
+videolength = 1 # Minutes
+capturelength = 11520 # Minutes
 totalshots = videolength * 60 * fps
 #intershotdelay = timedelta(seconds=capturelength * 60 / totalshots) # intershotdelay unit = timedelta in seconds
 intershotdelay = capturelength * 60 / totalshots # [Sekunden]
