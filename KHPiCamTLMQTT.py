@@ -17,6 +17,7 @@
 
 from datetime import datetime 
 from datetime import timedelta 
+import paho.mqtt.client as mqtt
 import subprocess 
 # sudo apt-get install imagemagick
 import time 
@@ -45,15 +46,27 @@ verbosemode = False
 useraspistill = True
 displaycapturedimages = False
 
-
-fps = 24
-videolength = 1 # Minutes
-capturelength = 11520 # Minutes
+fps = 12
+videolength = 0.1 # Minutes
+capturelength = 10 # Minutes
+# fps = 24
+# videolength = 1 # Minutes
+# capturelength = 11520 # Minutes
 totalshots = videolength * 60 * fps
 #intershotdelay = timedelta(seconds=capturelength * 60 / totalshots) # intershotdelay unit = timedelta in seconds
 intershotdelay = capturelength * 60 / totalshots # [Sekunden]
 
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+
+
+
 def main():
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.connect("192.168.178.101", 1883, 60)
+    client.loop_start()
+
     teststart=float(time.time()) # Startzeit abspeichern und am Ende mit der Endzeit anzeigen
     idy = Identify(subprocess) # das ist ImageMagick
     if verbosemode==True:
@@ -85,6 +98,8 @@ def main():
             #last_started = datetime.now()
             config = CONFIGS[current_config]
             filename = timestr + '/image%05d.jpg' % shot
+            client.publish("zigbee2mqtt/Lampe_Schreibtisch/set", "{   \"state\": \"ON\", \"transition\": \"2\" }")
+            time.sleep(2)
             if useraspistill == False:
                 with picamera.PiCamera() as camera:
                     camera.exif_tags['IFD0.Artist'] = 'Karsten Hartlieb'
@@ -98,13 +113,16 @@ def main():
                     time.sleep(2)
                     camera.capture(filename)
                     camera.stop_preview()
+                    time.sleep(2)
             else:
                 optionstring = "-w %d -h %d -t 1 -ISO %d --shutter %d -o %s" % (width, height, config[0], config[2], filename)
                 if verbosemode == True:
                     optionstring = "-w %d -h %d -v -t 1 -ISO %d --shutter %d -o %s" % (width, height, config[0], config[2], filename)
                     print optionstring
                 os.system("raspistill " + optionstring)
-                
+
+            time.sleep(2)    
+            client.publish("zigbee2mqtt/Lampe_Schreibtisch/set", "{   \"state\": \"OFF\", \"transition\": \"2\" }")
 
             #prev_acquired = last_acquired
             brightness = float(idy.mean_brightness(filename))
